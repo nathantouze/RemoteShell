@@ -51,31 +51,35 @@ const std::string CoreServer::execute_shell_command(const char *cmd)
 
 const std::string CoreServer::get_windows_os()
 {
-    OSVERSIONINFOEX info;
+    #ifdef _WIN32
+        OSVERSIONINFOEX info;
 
-    ZeroMemory(&info, sizeof(OSVERSIONINFOEX));
-    info.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-    GetVersionEx((LPOSVERSIONINFO)&info);
-    int version = info.dwMajorVersion * 100 + info.dwMinorVersion * 10 - (info.wProductType != VER_NT_WORKSTATION ? 5 : 0);
+        ZeroMemory(&info, sizeof(OSVERSIONINFOEX));
+        info.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+        GetVersionEx((LPOSVERSIONINFO)&info);
+        int version = info.dwMajorVersion * 100 + info.dwMinorVersion * 10 - (info.wProductType != VER_NT_WORKSTATION ? 5 : 0);
 
-    switch (version) {
-        case 1000:
-            return "Windows 10";
-        case 630:
-            return "Windows 8.1";
-        case 620:
-            return "Windows 8.0";
-        case 615:
-            return "Windows Server 2012";
-        case 610:
-            return "Windows 7";
-        case 605:
-            return "Windows Server 2008 R2";
-        case 600:
-            return "Windows Vista";
-        default:
-            return "Windows (unknown)";
-    }
+        switch (version) {
+            case 1000:
+                return "Windows 10";
+            case 630:
+                return "Windows 8.1";
+            case 620:
+                return "Windows 8.0";
+            case 615:
+                return "Windows Server 2012";
+            case 610:
+                return "Windows 7";
+            case 605:
+                return "Windows Server 2008 R2";
+            case 600:
+                return "Windows Vista";
+            default:
+                return "Windows (unknown)";
+        }
+    #else
+        return "Error";
+    #endif
 }
 
 const std::string CoreServer::get_other_os()

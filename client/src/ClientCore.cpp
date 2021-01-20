@@ -32,7 +32,6 @@ void ClientCore::start()
             send_command_to_TCP_server(input);
         }
     }
-    cli.~CLI();
 }
 
 void ClientCore::ask_informations()
