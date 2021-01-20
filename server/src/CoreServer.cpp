@@ -89,19 +89,23 @@ const std::string CoreServer::get_other_os()
     #else
         struct utsname buf;
         uname(&buf);
-        std::cout << std::string(buf.sysname) << std::endl;
-        std::cout << std::string(buf.nodename) << std::endl;
-        std::cout << std::string(buf.release) << std::endl;
-        std::cout << std::string(buf.version) << std::endl;
-        std::cout << std::string(buf.machine) << std::endl;
-        return "Linux";
+        return std::string(buf.sysname) + " " + std::string(buf.version);
+    #endif
+}
+
+const std::string CoreServer::get_other_pwd()
+{
+    #ifdef _WIN32
+        return "{ERROR}/";
+    #else
+        return execute_shell_command("pwd");
     #endif
 }
 
 void CoreServer::send_informations_to_client(FWNetwork::OwnedMessageTCP<RemoteShell::TCPCustomMessageID> &msgGet)
 {
     std::string os = GETOS();
-    std::cout << "Os: " << os << std::endl;
+    std::string pwd = GETPWD();
 }
 
 void CoreServer::analyse_messages()

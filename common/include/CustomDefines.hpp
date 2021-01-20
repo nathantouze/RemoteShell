@@ -11,12 +11,14 @@
     #define PCLOSE _pclose
     #define SETENV _putenv
     #define GETOS get_windows_os
+    #define GETPWD get_windows_pwd
     #define SHELL_PATH "ComSpec=C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
 #else
     #define POPEN popen
     #define PCLOSE pclose
     #define SETENV putenv
     #define GETOS get_other_os
+    #define GETPWD get_other_pwd
     #define SHELL_PATH "SHELL=/bin/bash"
 #endif
 

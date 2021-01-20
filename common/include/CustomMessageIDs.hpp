@@ -1,5 +1,6 @@
 #ifndef _CUSTOM_MESSAGES_
 #define _CUSTOM_MESSAGES_
+
 #include <cstdint>
 
 namespace RemoteShell {
