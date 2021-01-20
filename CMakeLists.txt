@@ -57,7 +57,12 @@ target_include_directories(RemoteShell_Client PUBLIC
 
 target_compile_options(RemoteShell_Server PUBLIC
     $<$<CXX_COMPILER_ID:MSVC>:/W3 /MD -D_WIN32_WINNT=0x0A00 /D_ITERATOR_DEBUG_LEVEL=0 /permissive- /TP /std:c++17>
-    $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>: -Wall -Werror -fPIC -ldl -lpthread -O3>
+    $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>: -Wall -Werror -fPIC -ldl -pthread -O3 -g>
+)
+
+target_compile_options(RemoteShell_Client PUBLIC
+    $<$<CXX_COMPILER_ID:MSVC>:/W3 /MD -D_WIN32_WINNT=0x0A00 /D_ITERATOR_DEBUG_LEVEL=0 /permissive- /TP /std:c++17>
+    $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>: -Wall -fPIC -ldl -pthread -O3 -g>
 )
 
 target_link_libraries(RemoteShell_Server ${CONAN_LIBS} ${CMAKE_DL_LIBS})

@@ -66,6 +66,6 @@ void Network::stopUDPClient()
 
 Network::~Network(void) 
 {
-    stopTCPClient();
-    stopUDPClient();
+    if (_networkTCP.isConnected())
+        stopTCPClient();
 };

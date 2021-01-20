@@ -14,4 +14,5 @@ int main(int ac, char **av)
     std::string port = av[2];
     ClientCore core(host, port);
     core.start();
+    return (0);
 }

@@ -30,6 +30,7 @@ void ClientCore::start()
             send_command_to_TCP_server(input);
         }
     }
+    cli.~CLI();
 }
 
 void ClientCore::send_command_to_TCP_server(const std::string &input)
@@ -39,7 +40,11 @@ void ClientCore::send_command_to_TCP_server(const std::string &input)
     FWNetwork::Message<RemoteShell::TCPCustomMessageID> msg;
 
     if (input == "exit") {
+        msg.header.id = RemoteShell::TCPCustomMessageID::CLIENT_DISCONNECTED;
         _running = false;
+        std::cout << "Disconnecting client" << std::endl;
+        messages.push_back(msg);
+        _network.sendMessagesToTCP(messages);
         return;
     }
     msg.header.id = RemoteShell::TCPCustomMessageID::SHELL_CMD;
@@ -76,6 +81,9 @@ void ClientCore::analyse_messages_from_TCP()
                 msg >> output;
                 std::cout << output << std::endl;
                 std::cout << "> ";
+                break;
+            }
+            default: {
                 break;
             }
         }
