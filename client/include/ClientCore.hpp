@@ -15,6 +15,7 @@ class ClientCore {
     private:
         void analyse_messages_from_TCP(void);
         void send_command_to_TCP_server(const std::string &cmd);
+        void ask_informations();
 
         std::string _host;
         std::string _port;

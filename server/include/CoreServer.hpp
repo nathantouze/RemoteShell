@@ -14,6 +14,9 @@ class CoreServer {
     private:
         void analyse_messages();
         const std::string execute_shell_command(const char *cmd);
+        void send_informations_to_client(FWNetwork::OwnedMessageTCP<RemoteShell::TCPCustomMessageID> &msgGet);
+        const std::string get_windows_os();
+        const std::string get_other_os();
         NetworkServer _network;
         FPSManager _fpsManager;
         bool _running;

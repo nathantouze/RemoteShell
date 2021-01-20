@@ -17,6 +17,8 @@ void ClientCore::start()
     std::string input;
 
     _network.startTCPClient(_host, _port);
+    if (_network.isConnectedToTCP())
+        ask_informations();
     _fpsManager.start();
     while (_running) {
         if (_fpsManager.isTimePassed() && _network.isConnectedToTCP()) {
@@ -31,6 +33,16 @@ void ClientCore::start()
         }
     }
     cli.~CLI();
+}
+
+void ClientCore::ask_informations()
+{
+    std::vector<FWNetwork::Message<RemoteShell::TCPCustomMessageID>> messages;
+    FWNetwork::Message<RemoteShell::TCPCustomMessageID> msg;
+
+    msg.header.id = RemoteShell::TCPCustomMessageID::INFORMATION_ASK;
+    messages.push_back(msg);
+    _network.sendMessagesToTCP(messages);
 }
 
 void ClientCore::send_command_to_TCP_server(const std::string &input)

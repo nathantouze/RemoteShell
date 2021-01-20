@@ -7,6 +7,12 @@
 #include <string>
 #include <array>
 
+#ifdef _WIN32
+    #include <windows.h>
+#else
+    #include <sys/utsname.h>
+#endif
+
 CoreServer::CoreServer(int port) : _network(port), _fpsManager(30.0f), _running(true)
 {
 }
@@ -43,6 +49,57 @@ const std::string CoreServer::execute_shell_command(const char *cmd)
     return result;
 }
 
+const std::string CoreServer::get_windows_os()
+{
+    OSVERSIONINFOEX info;
+
+    ZeroMemory(&info, sizeof(OSVERSIONINFOEX));
+    info.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+    GetVersionEx((LPOSVERSIONINFO)&info);
+    int version = info.dwMajorVersion * 100 + info.dwMinorVersion * 10 - (info.wProductType != VER_NT_WORKSTATION ? 5 : 0);
+
+    switch (version) {
+        case 1000:
+            return "Windows 10";
+        case 630:
+            return "Windows 8.1";
+        case 620:
+            return "Windows 8.0";
+        case 615:
+            return "Windows Server 2012";
+        case 610:
+            return "Windows 7";
+        case 605:
+            return "Windows Server 2008 R2";
+        case 600:
+            return "Windows Vista";
+        default:
+            return "Windows (unknown)";
+    }
+}
+
+const std::string CoreServer::get_other_os()
+{
+    #ifdef _WIN32
+        return "Error";
+    #else
+        struct utsname buf;
+        uname(&buf);
+        std::cout << std::string(buf.sysname) << std::endl;
+        std::cout << std::string(buf.nodename) << std::endl;
+        std::cout << std::string(buf.release) << std::endl;
+        std::cout << std::string(buf.version) << std::endl;
+        std::cout << std::string(buf.machine) << std::endl;
+        return "Linux";
+    #endif
+}
+
+void CoreServer::send_informations_to_client(FWNetwork::OwnedMessageTCP<RemoteShell::TCPCustomMessageID> &msgGet)
+{
+    std::string os = GETOS();
+    std::cout << "Os: " << os << std::endl;
+}
+
 void CoreServer::analyse_messages()
 {
     while (!_network.getMessagesFromTCP().empty()) {
@@ -72,6 +129,10 @@ void CoreServer::analyse_messages()
                 answer.header.id = RemoteShell::TCPCustomMessageID::SHELL_OUTPUT;
                 answer << output;
                 msgGet.remote->send(answer);
+                break;
+            }
+            case RemoteShell::TCPCustomMessageID::INFORMATION_ASK: {
+                send_informations_to_client(msgGet);
                 break;
             }
             default: {
