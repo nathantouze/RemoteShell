@@ -8,6 +8,7 @@
 
 #ifdef _WIN32
     #define POPEN _popen
+    #define STRDUP _strdup
     #define PCLOSE _pclose
     #define SETENV _putenv
     #define GETOS get_windows_os
@@ -16,6 +17,7 @@
 #else
     #define POPEN popen
     #define PCLOSE pclose
+    #define STRDUP strdup
     #define SETENV putenv
     #define GETOS get_other_os
     #define GETPWD get_other_pwd

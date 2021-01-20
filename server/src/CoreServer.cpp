@@ -96,16 +96,49 @@ const std::string CoreServer::get_other_os()
 const std::string CoreServer::get_other_pwd()
 {
     #ifdef _WIN32
-        return "{ERROR}/";
+        return "{ERROR}";
     #else
-        return execute_shell_command("pwd");
+        std::string pwd_str = execute_shell_command("pwd");
+        return pwd_str.substr(0, pwd_str.size() - 1);
     #endif
 }
 
-void CoreServer::send_informations_to_client(FWNetwork::OwnedMessageTCP<RemoteShell::TCPCustomMessageID> &msgGet)
+const std::string CoreServer::get_windows_pwd()
 {
-    std::string os = GETOS();
-    std::string pwd = GETPWD();
+    #ifdef _WIN32
+        char pwd[MAX_PATH];
+        GetCurrentDirectory(MAX_PATH, pwd);
+        return std::string(pwd);
+    #else
+        return "{ERROR}";
+    #endif
+}
+
+void CoreServer::send_informations_to_client(struct FWNetwork::OwnedMessageTCP<RemoteShell::TCPCustomMessageID> &msgGet)
+{
+    std::string os_str = GETOS();
+    std::string pwd_str = GETPWD();
+    char os[MAX_OS_LENGTH];
+    char pwd[MAX_PWD_LENGTH];
+    FWNetwork::Message<RemoteShell::TCPCustomMessageID> answer;
+
+    for (unsigned int i = 0; i < MAX_OS_LENGTH; i++) {
+        if (i >= MAX_OS_LENGTH)
+            os[i] = '\0';
+        else
+            os[i] = os_str[i];
+    }
+    os_str[MAX_OS_LENGTH - 1] = '\0';
+    for (unsigned int i = 0; i < MAX_PWD_LENGTH; i++) {
+        if (i >= MAX_PWD_LENGTH)
+            pwd[i] = '\0';
+        else
+            pwd[i] = pwd_str[i];
+    }
+    pwd_str[MAX_PWD_LENGTH - 1] = '\0';
+    answer.header.id = RemoteShell::TCPCustomMessageID::INFORMATION_SEND;
+    answer << os << pwd;
+    msgGet.remote->send(answer);
 }
 
 void CoreServer::analyse_messages()

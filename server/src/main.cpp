@@ -6,7 +6,7 @@
 int main()
 {
     CoreServer core(4242);
-    char *shell_path = strdup(SHELL_PATH);
+    char *shell_path = STRDUP(SHELL_PATH);
 
     SETENV(shell_path);
     core.start();

@@ -3,7 +3,7 @@
 #include "CLI.hpp"
 #include <vector>
 
-ClientCore::ClientCore(const std::string &host, const std::string &port) : _host(host), _port(port), _running(true), _fpsManager(30.0f)
+ClientCore::ClientCore(const std::string &host, const std::string &port) : _host(host), _port(port), _pwd("{Unknown}"), _os("Unknown"), _running(true), _fpsManager(30.0f)
 {
 }
 
@@ -28,10 +28,29 @@ void ClientCore::start()
                 return;
         }
         input = cli.getline();
-        if (!input.empty()) {
-            send_command_to_TCP_server(input);
-        }
+        if (!input.empty())
+            handle_input(input);
     }
+}
+
+void ClientCore::handle_input(const std::string &input)
+{
+    std::vector<FWNetwork::Message<RemoteShell::TCPCustomMessageID>> messages;
+    FWNetwork::Message<RemoteShell::TCPCustomMessageID> msg;
+
+    if (input == "exit") {
+        msg.header.id = RemoteShell::TCPCustomMessageID::CLIENT_DISCONNECTED;
+        _running = false;
+        std::cout << "Disconnecting client..." << std::endl;
+        messages.push_back(msg);
+        _network.sendMessagesToTCP(messages);
+        return;
+    } else if (input == "os") {
+        std::cout << _os << std::endl;
+        new_prompt();
+        return;
+    }
+    send_command_to_TCP_server(input);
 }
 
 void ClientCore::ask_informations()
@@ -50,14 +69,6 @@ void ClientCore::send_command_to_TCP_server(const std::string &input)
     std::vector<FWNetwork::Message<RemoteShell::TCPCustomMessageID>> messages;
     FWNetwork::Message<RemoteShell::TCPCustomMessageID> msg;
 
-    if (input == "exit") {
-        msg.header.id = RemoteShell::TCPCustomMessageID::CLIENT_DISCONNECTED;
-        _running = false;
-        std::cout << "Disconnecting client" << std::endl;
-        messages.push_back(msg);
-        _network.sendMessagesToTCP(messages);
-        return;
-    }
     msg.header.id = RemoteShell::TCPCustomMessageID::SHELL_CMD;
     for (unsigned int i = 0; i < MAX_CMD_LENGTH; i++) {
         if (i >= input.size())
@@ -78,7 +89,6 @@ void ClientCore::analyse_messages_from_TCP()
         switch (msg.header.id) {
             case RemoteShell::TCPCustomMessageID::SERVER_ACCEPT: {
                 std::cout << "Connected to the server." << std::endl;
-                std::cout << "> ";
                 break;
             }
             case RemoteShell::TCPCustomMessageID::SERVER_DISCONNECTED: {
@@ -91,7 +101,18 @@ void ClientCore::analyse_messages_from_TCP()
 
                 msg >> output;
                 std::cout << output << std::endl;
-                std::cout << "> ";
+                new_prompt();
+                break;
+            }
+            case RemoteShell::TCPCustomMessageID::INFORMATION_SEND: {
+                char os[MAX_OS_LENGTH];
+                char pwd[MAX_PWD_LENGTH];
+
+                msg >> pwd;
+                msg >> os;
+                _os = std::string(os);
+                _pwd = std::string(pwd);
+                new_prompt();
                 break;
             }
             default: {
@@ -99,4 +120,9 @@ void ClientCore::analyse_messages_from_TCP()
             }
         }
     }
+}
+
+void ClientCore::new_prompt() const
+{
+    std::cout << _pwd << " $> ";
 }
