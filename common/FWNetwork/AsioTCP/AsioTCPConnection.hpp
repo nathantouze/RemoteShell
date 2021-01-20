@@ -22,7 +22,7 @@ namespace TCP {
             };
 
             Connection(OwnerType parent, boost::asio::io_context& ioContext, boost::asio::ip::tcp::socket socket, ThreadQueue<OwnedMessageTCP<T>>& qIn)
-            : _ioContext(ioContext), _socket(std::move(socket)), _dataIn(qIn)
+            : _dataIn(qIn), _socket(std::move(socket)), _ioContext(ioContext)
             {
                 _ownerType = parent;
             }

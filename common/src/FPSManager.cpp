@@ -15,10 +15,6 @@ bool FPSManager::isTimePassed()
 {
     std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
 
-    //std::chrono::duration<double> elapsed_seconds = now - _begin;
-
-	std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
-
     auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(now - _begin);
 
     if ((double)(milliseconds.count()) > (double)(1000 / _fpsWanted)) {
