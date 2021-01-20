@@ -49,6 +49,10 @@ void ClientCore::handle_input(const std::string &input)
         std::cout << _os << std::endl;
         new_prompt();
         return;
+    } else if (input == "host") {
+        std::cout << _username << "@" << _host << ":" << _port <<  std::endl;
+        new_prompt();
+        return;
     }
     send_command_to_TCP_server(input);
 }
@@ -107,11 +111,14 @@ void ClientCore::analyse_messages_from_TCP()
             case RemoteShell::TCPCustomMessageID::INFORMATION_SEND: {
                 char os[MAX_OS_LENGTH];
                 char pwd[MAX_PWD_LENGTH];
+                char username[MAX_USERNAME_LENGTH];
 
+                msg >> username;
                 msg >> pwd;
                 msg >> os;
                 _os = std::string(os);
                 _pwd = std::string(pwd);
+                _username = std::string(username);
                 new_prompt();
                 break;
             }

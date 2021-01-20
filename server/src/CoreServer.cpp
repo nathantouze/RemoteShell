@@ -49,7 +49,7 @@ const std::string CoreServer::execute_shell_command(const char *cmd)
     return result;
 }
 
-const std::string CoreServer::get_windows_os()
+const std::string CoreServer::get_os()
 {
     #ifdef _WIN32
         OSVERSIONINFOEX info;
@@ -78,48 +78,44 @@ const std::string CoreServer::get_windows_os()
                 return "Windows (unknown)";
         }
     #else
-        return "Error";
-    #endif
-}
-
-const std::string CoreServer::get_other_os()
-{
-    #ifdef _WIN32
-        return "Error";
-    #else
         struct utsname buf;
         uname(&buf);
         return std::string(buf.sysname) + " " + std::string(buf.version);
     #endif
 }
 
-const std::string CoreServer::get_other_pwd()
-{
-    #ifdef _WIN32
-        return "{ERROR}";
-    #else
-        std::string pwd_str = execute_shell_command("pwd");
-        return pwd_str.substr(0, pwd_str.size() - 1);
-    #endif
-}
-
-const std::string CoreServer::get_windows_pwd()
+const std::string CoreServer::get_pwd()
 {
     #ifdef _WIN32
         char pwd[MAX_PATH];
         GetCurrentDirectory(MAX_PATH, pwd);
         return std::string(pwd);
     #else
-        return "{ERROR}";
+        std::string pwd_str = execute_shell_command("pwd");
+        return pwd_str.substr(0, pwd_str.size() - 1);
+    #endif
+}
+
+const std::string CoreServer::get_username()
+{
+    #ifdef _WIN32
+        std::string username_str = execute_shell_command("whoami");
+        username_str.substr(username_str.find_last_of("\\") != std::string::npos ? username_str.find_last_of("\\") + 1 : 0);
+        return username_str.substr(0, username_str.size() - 1);
+    #else
+        std::string username_str = execute_shell_command("whoami");
+        return username_str.substr(0, username_str.size() - 1);
     #endif
 }
 
 void CoreServer::send_informations_to_client(struct FWNetwork::OwnedMessageTCP<RemoteShell::TCPCustomMessageID> &msgGet)
 {
-    std::string os_str = GETOS();
-    std::string pwd_str = GETPWD();
+    std::string os_str = get_os();
+    std::string pwd_str = get_pwd();
+    std::string username_str = get_username();
     char os[MAX_OS_LENGTH];
     char pwd[MAX_PWD_LENGTH];
+    char username[MAX_USERNAME_LENGTH];
     FWNetwork::Message<RemoteShell::TCPCustomMessageID> answer;
 
     for (unsigned int i = 0; i < MAX_OS_LENGTH; i++) {
@@ -136,8 +132,15 @@ void CoreServer::send_informations_to_client(struct FWNetwork::OwnedMessageTCP<R
             pwd[i] = pwd_str[i];
     }
     pwd_str[MAX_PWD_LENGTH - 1] = '\0';
+    for (unsigned int i = 0; i < MAX_USERNAME_LENGTH; i++) {
+        if (i >= MAX_USERNAME_LENGTH)
+            username[i] = '\0';
+        else
+            username[i] = username_str[i];
+    }
+    username[MAX_USERNAME_LENGTH - 1] = '\0';
     answer.header.id = RemoteShell::TCPCustomMessageID::INFORMATION_SEND;
-    answer << os << pwd;
+    answer << os << pwd << username;
     msgGet.remote->send(answer);
 }
 

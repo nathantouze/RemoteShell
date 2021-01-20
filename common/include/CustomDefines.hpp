@@ -5,6 +5,7 @@
 #define MAX_OUTPUT_LENGTH 8192
 #define MAX_OS_LENGTH 32
 #define MAX_PWD_LENGTH 128
+#define MAX_USERNAME_LENGTH 64
 
 #ifdef _WIN32
     #define POPEN _popen

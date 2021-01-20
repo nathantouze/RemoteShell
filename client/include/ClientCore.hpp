@@ -23,6 +23,7 @@ class ClientCore {
         std::string _port;
         std::string _pwd;
         std::string _os;
+        std::string _username;
         bool _running;
         FPSManager _fpsManager;
         Network _network;
