@@ -2,8 +2,9 @@
 #include "CustomDefines.hpp"
 #include "CLI.hpp"
 #include <vector>
+#include <algorithm>
 
-ClientCore::ClientCore(const std::string &host, const std::string &port) : _host(host), _port(port), _pwd("{Unknown}"), _os("Unknown"), _running(true), _fpsManager(30.0f)
+ClientCore::ClientCore(const std::string &host, const std::string &port) : _host(host), _port(port), _pwd(), _os("Unknown"), _running(true), _fpsManager(30.0f)
 {
 }
 
@@ -53,8 +54,12 @@ void ClientCore::handle_input(const std::string &input)
         std::cout << _username << "@" << _host << ":" << _port <<  std::endl;
         new_prompt();
         return;
+    } else if (input.substr(0, 3) == "cd " || input == "cd") { // To be updated soon (example: "ls -la; cd /; ls")
+        send_command_to_TCP_server(input, RemoteShell::TCPCustomMessageID::CHANGE_DIRECTORY_IN);
+        //new_prompt();
+        return;
     }
-    send_command_to_TCP_server(input);
+    send_command_to_TCP_server(input, RemoteShell::TCPCustomMessageID::SHELL_CMD);
 }
 
 void ClientCore::ask_informations()
@@ -67,20 +72,22 @@ void ClientCore::ask_informations()
     _network.sendMessagesToTCP(messages);
 }
 
-void ClientCore::send_command_to_TCP_server(const std::string &input)
+void ClientCore::send_command_to_TCP_server(const std::string &input, enum RemoteShell::TCPCustomMessageID header)
 {
     char cmd[MAX_CMD_LENGTH];
+    std::string full_cmd = "cd " + _pwd.getCurrent() + "; " + input;
     std::vector<FWNetwork::Message<RemoteShell::TCPCustomMessageID>> messages;
     FWNetwork::Message<RemoteShell::TCPCustomMessageID> msg;
 
-    msg.header.id = RemoteShell::TCPCustomMessageID::SHELL_CMD;
-    for (unsigned int i = 0; i < MAX_CMD_LENGTH; i++) {
-        if (i >= input.size())
+    msg.header.id = header;
+    for (size_t i = 0; i < MAX_CMD_LENGTH; i++) {
+        if (i >= full_cmd.length())
             cmd[i] = '\0';
         else
-            cmd[i] = input[i];
+            cmd[i] = full_cmd[i];
     }
     cmd[MAX_CMD_LENGTH - 1] = '\0';
+    std::cout << std::string(cmd) << std::endl;
     msg << cmd;
     messages.push_back(msg);
     _network.sendMessagesToTCP(messages);
@@ -117,8 +124,21 @@ void ClientCore::analyse_messages_from_TCP()
                 msg >> pwd;
                 msg >> os;
                 _os = std::string(os);
-                _pwd = std::string(pwd);
+                _pwd.init(std::string(pwd));
                 _username = std::string(username);
+                new_prompt();
+                break;
+            }
+            case RemoteShell::TCPCustomMessageID::CHANGE_DIRECTORY_OUT: {
+                char pwd[MAX_PWD_LENGTH];
+                char output[MAX_PWD_LENGTH];
+
+                msg >> pwd;
+                msg >> output;
+                _pwd.change_directory(std::string(pwd));
+                std::string output_str(output);
+                if (output_str.length() > 0)
+                    std::cout << output_str << std::endl;
                 new_prompt();
                 break;
             }
@@ -131,5 +151,5 @@ void ClientCore::analyse_messages_from_TCP()
 
 void ClientCore::new_prompt() const
 {
-    std::cout << _pwd << " $> ";
+    std::cout << _pwd.getCurrent() << " $> ";
 }

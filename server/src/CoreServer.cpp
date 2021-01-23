@@ -13,8 +13,16 @@
     #include <sys/utsname.h>
 #endif
 
-CoreServer::CoreServer(int port) : _network(port), _fpsManager(30.0f), _running(true)
+CoreServer::CoreServer(int port) : _network(port), _fpsManager(30.0f), _running(true), _pwd()
 {
+    #ifdef _WIN32
+        char pwd[MAX_PATH];
+        GetCurrentDirectory(MAX_PATH, pwd);
+        _pwd.init(std::string(pwd));
+    #else
+        std::string pwd_str = execute_shell_command("pwd");
+        _pwd.init(pwd_str.substr(0, pwd_str.size() - 1));
+    #endif
 }
 
 void CoreServer::start()
@@ -38,6 +46,7 @@ const std::string CoreServer::execute_shell_command(const char *cmd)
 {
     std::array<char, 128> buffer;
     std::string result;
+    std::cout << std::string(cmd) << std::endl;
     std::unique_ptr<FILE, decltype(&PCLOSE)> pipe(POPEN(cmd, "r"), PCLOSE);
 
     if (!pipe) {
@@ -84,18 +93,6 @@ const std::string CoreServer::get_os()
     #endif
 }
 
-const std::string CoreServer::get_pwd()
-{
-    #ifdef _WIN32
-        char pwd[MAX_PATH];
-        GetCurrentDirectory(MAX_PATH, pwd);
-        return std::string(pwd);
-    #else
-        std::string pwd_str = execute_shell_command("pwd");
-        return pwd_str.substr(0, pwd_str.size() - 1);
-    #endif
-}
-
 const std::string CoreServer::get_username()
 {
     #ifdef _WIN32
@@ -111,7 +108,7 @@ const std::string CoreServer::get_username()
 void CoreServer::send_informations_to_client(struct FWNetwork::OwnedMessageTCP<RemoteShell::TCPCustomMessageID> &msgGet)
 {
     std::string os_str = get_os();
-    std::string pwd_str = get_pwd();
+    std::string pwd_str = _pwd.getCurrent();
     std::string username_str = get_username();
     char os[MAX_OS_LENGTH];
     char pwd[MAX_PWD_LENGTH];
@@ -179,9 +176,71 @@ void CoreServer::analyse_messages()
                 send_informations_to_client(msgGet);
                 break;
             }
+            case RemoteShell::TCPCustomMessageID::CHANGE_DIRECTORY_IN: {
+                change_directory(msgGet);
+            }
             default: {
                 break;
             }
         }
     }
+}
+
+const std::vector<std::string> CoreServer::split_string(std::string string, char separator) const
+{
+    std::vector<std::string> vString = {};
+    size_t count = std::count(string.begin(), string.end(), separator);
+
+    for (size_t i = 0; i <= count; i++) {
+        vString.push_back(string.substr(0, string.find_first_of(separator)));
+        if (i == count)
+            break;
+        string = string.substr(string.find_first_of(separator) + 1);
+    }
+    return vString;
+}
+
+void CoreServer::replaceAll(std::string &str, const std::string &before, const std::string &after)
+{
+    size_t start_pos = 0;
+
+    while((start_pos = str.find(before, start_pos)) != std::string::npos) {
+        str.replace(start_pos, before.length(), after);
+        start_pos += after.length();
+    }
+}
+
+void CoreServer::change_directory(FWNetwork::OwnedMessageTCP<RemoteShell::TCPCustomMessageID> &msgGet)
+{
+    char cmd[MAX_CMD_LENGTH];
+    char output[MAX_OUTPUT_LENGTH];
+    char newPWD[MAX_PWD_LENGTH];
+    FWNetwork::Message<RemoteShell::TCPCustomMessageID> answer;
+    std::string output_str;
+    std::vector<std::string> cmd_splited;
+
+    msgGet.msg >> cmd;
+    output_str = execute_shell_command(cmd);
+    cmd_splited = split_string(std::string(cmd), ';');
+    if (output_str.length() == 0 && cmd_splited.at(1).length() > 3)
+        _pwd.change_directory(cmd_splited.at(1).substr(3));
+    std::string pwd_str = _pwd.getCurrent();
+    for (size_t i = 0; i < MAX_PWD_LENGTH; i++) {
+        if (i >= pwd_str.length())
+            newPWD[i] = '\0';
+        else
+            newPWD[i] = pwd_str[i];
+    }
+    newPWD[MAX_PWD_LENGTH - 1] = '\0';
+    for (size_t i = 0; i < MAX_OUTPUT_LENGTH; i++) {
+        if (i >= output_str.length())
+            output[i] = '\0';
+        else
+            output[i] = output_str[i];
+    }
+    output[MAX_OUTPUT_LENGTH - 1] = '\0';
+    answer.header.id = RemoteShell::TCPCustomMessageID::CHANGE_DIRECTORY_OUT;
+    answer << output;
+    answer << newPWD;
+    msgGet.remote->send(answer);
 }

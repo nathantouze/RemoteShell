@@ -13,6 +13,8 @@ namespace RemoteShell {
         INFORMATION_SEND,           //Body : char[MAX_OS_LENGTH] os << char[MAX_PWD_LENGTH];
         SHELL_CMD,                  //Body : char[MAX_CMD_LENGTH] cmd;
         SHELL_OUTPUT,               //Body : char[MAX_OUTPUT_LENGTH] output;
+        CHANGE_DIRECTORY_IN,        //Body : char[MAX_CMD_LENGTH] cmd;
+        CHANGE_DIRECTORY_OUT,       //Body : char[MAX_OUTPUT_LENGTH] output << char[MAX_PWD_LENGTH] newPath;
     };
 
     enum UDPCustomMessageID : uint32_t {
