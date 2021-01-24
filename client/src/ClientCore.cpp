@@ -4,6 +4,7 @@
 #include "CLI.hpp"
 #include <vector>
 #include <algorithm>
+#include <cstdio>
 
 ClientCore::ClientCore(const std::string &host, const std::string &port) : _host(host), _port(port), _pwd(), _os("Unknown"), _running(true), _fpsManager(30.0f)
 {
@@ -145,4 +146,5 @@ void ClientCore::analyse_messages_from_TCP()
 void ClientCore::new_prompt() const
 {
     std::cout << _pwd.getCurrent() << " $> ";
+    std::fflush(stdout);
 }
