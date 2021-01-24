@@ -20,7 +20,6 @@ class CoreServer {
         const std::string get_os();
         const std::string get_username();
         const std::vector<std::string> split_string(const std::string string, char separator) const;
-        void replaceAll(std::string &str, const std::string &before, const std::string &after);
         NetworkServer _network;
         FPSManager _fpsManager;
         bool _running;

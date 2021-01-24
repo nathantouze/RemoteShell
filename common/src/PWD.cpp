@@ -1,4 +1,5 @@
 #include "PWD.hpp"
+#include <iostream>
 
 PWD::PWD() : _current("/"), _disk("")
 {
@@ -79,7 +80,7 @@ void PWD::change_directory(const std::string &path)
         setCurrent(toString(vPath));
         return;
     }
-    for (const auto folder: vPath)
+    for (auto folder: vPath)
         vCurrent.push_back(folder);
     clearPath(vCurrent);
     setCurrent(toString(vCurrent));

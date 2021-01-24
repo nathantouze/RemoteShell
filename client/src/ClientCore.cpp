@@ -1,5 +1,6 @@
 #include "ClientCore.hpp"
 #include "CustomDefines.hpp"
+#include "StringManagement.hpp"
 #include "CLI.hpp"
 #include <vector>
 #include <algorithm>
@@ -75,19 +76,11 @@ void ClientCore::ask_informations()
 void ClientCore::send_command_to_TCP_server(const std::string &input, enum RemoteShell::TCPCustomMessageID header)
 {
     char cmd[MAX_CMD_LENGTH];
-    std::string full_cmd = "cd " + _pwd.getCurrent() + "; " + input;
     std::vector<FWNetwork::Message<RemoteShell::TCPCustomMessageID>> messages;
     FWNetwork::Message<RemoteShell::TCPCustomMessageID> msg;
 
     msg.header.id = header;
-    for (size_t i = 0; i < MAX_CMD_LENGTH; i++) {
-        if (i >= full_cmd.length())
-            cmd[i] = '\0';
-        else
-            cmd[i] = full_cmd[i];
-    }
-    cmd[MAX_CMD_LENGTH - 1] = '\0';
-    std::cout << std::string(cmd) << std::endl;
+    StringManagement::string_to_char_array("cd " + _pwd.getCurrent() + "; " + input, cmd, MAX_CMD_LENGTH);
     msg << cmd;
     messages.push_back(msg);
     _network.sendMessagesToTCP(messages);

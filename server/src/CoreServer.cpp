@@ -1,5 +1,6 @@
 #include "CoreServer.hpp"
 #include "CustomDefines.hpp"
+#include "StringManagement.hpp"
 #include <cstdio>
 #include <iostream>
 #include <memory>
@@ -107,35 +108,15 @@ const std::string CoreServer::get_username()
 
 void CoreServer::send_informations_to_client(struct FWNetwork::OwnedMessageTCP<RemoteShell::TCPCustomMessageID> &msgGet)
 {
-    std::string os_str = get_os();
-    std::string pwd_str = _pwd.getCurrent();
-    std::string username_str = get_username();
     char os[MAX_OS_LENGTH];
     char pwd[MAX_PWD_LENGTH];
     char username[MAX_USERNAME_LENGTH];
     FWNetwork::Message<RemoteShell::TCPCustomMessageID> answer;
 
-    for (unsigned int i = 0; i < MAX_OS_LENGTH; i++) {
-        if (i >= MAX_OS_LENGTH)
-            os[i] = '\0';
-        else
-            os[i] = os_str[i];
-    }
-    os_str[MAX_OS_LENGTH - 1] = '\0';
-    for (unsigned int i = 0; i < MAX_PWD_LENGTH; i++) {
-        if (i >= MAX_PWD_LENGTH)
-            pwd[i] = '\0';
-        else
-            pwd[i] = pwd_str[i];
-    }
-    pwd_str[MAX_PWD_LENGTH - 1] = '\0';
-    for (unsigned int i = 0; i < MAX_USERNAME_LENGTH; i++) {
-        if (i >= MAX_USERNAME_LENGTH)
-            username[i] = '\0';
-        else
-            username[i] = username_str[i];
-    }
-    username[MAX_USERNAME_LENGTH - 1] = '\0';
+    StringManagement::string_to_char_array(get_os(), os, MAX_OS_LENGTH);
+    StringManagement::string_to_char_array(_pwd.getCurrent(), pwd, MAX_PWD_LENGTH);
+    StringManagement::string_to_char_array(get_username(), username, MAX_USERNAME_LENGTH);
+
     answer.header.id = RemoteShell::TCPCustomMessageID::INFORMATION_SEND;
     answer << os << pwd << username;
     msgGet.remote->send(answer);
@@ -160,13 +141,7 @@ void CoreServer::analyse_messages()
 
                 msg >> cmd;
                 output_str = execute_shell_command(cmd);
-                for (unsigned int i = 0; i < MAX_OUTPUT_LENGTH; i++) {
-                    if (i >= output_str.size())
-                        output[i] = '\0';
-                    else
-                        output[i] = output_str[i];
-                }
-                output[MAX_OUTPUT_LENGTH - 1] = '\0';
+                StringManagement::string_to_char_array(output_str, output, MAX_OUTPUT_LENGTH);
                 answer.header.id = RemoteShell::TCPCustomMessageID::SHELL_OUTPUT;
                 answer << output;
                 msgGet.remote->send(answer);
@@ -186,30 +161,6 @@ void CoreServer::analyse_messages()
     }
 }
 
-const std::vector<std::string> CoreServer::split_string(std::string string, char separator) const
-{
-    std::vector<std::string> vString = {};
-    size_t count = std::count(string.begin(), string.end(), separator);
-
-    for (size_t i = 0; i <= count; i++) {
-        vString.push_back(string.substr(0, string.find_first_of(separator)));
-        if (i == count)
-            break;
-        string = string.substr(string.find_first_of(separator) + 1);
-    }
-    return vString;
-}
-
-void CoreServer::replaceAll(std::string &str, const std::string &before, const std::string &after)
-{
-    size_t start_pos = 0;
-
-    while((start_pos = str.find(before, start_pos)) != std::string::npos) {
-        str.replace(start_pos, before.length(), after);
-        start_pos += after.length();
-    }
-}
-
 void CoreServer::change_directory(FWNetwork::OwnedMessageTCP<RemoteShell::TCPCustomMessageID> &msgGet)
 {
     char cmd[MAX_CMD_LENGTH];
@@ -218,27 +169,18 @@ void CoreServer::change_directory(FWNetwork::OwnedMessageTCP<RemoteShell::TCPCus
     FWNetwork::Message<RemoteShell::TCPCustomMessageID> answer;
     std::string output_str;
     std::vector<std::string> cmd_splited;
+    std::string cmd_cleared;
 
     msgGet.msg >> cmd;
     output_str = execute_shell_command(cmd);
-    cmd_splited = split_string(std::string(cmd), ';');
+    cmd_cleared = std::string(cmd);
+    StringManagement::replace_all(cmd_cleared, "; ", ";");
+    cmd_splited = StringManagement::split(cmd_cleared, ';');
     if (output_str.length() == 0 && cmd_splited.at(1).length() > 3)
         _pwd.change_directory(cmd_splited.at(1).substr(3));
-    std::string pwd_str = _pwd.getCurrent();
-    for (size_t i = 0; i < MAX_PWD_LENGTH; i++) {
-        if (i >= pwd_str.length())
-            newPWD[i] = '\0';
-        else
-            newPWD[i] = pwd_str[i];
-    }
-    newPWD[MAX_PWD_LENGTH - 1] = '\0';
-    for (size_t i = 0; i < MAX_OUTPUT_LENGTH; i++) {
-        if (i >= output_str.length())
-            output[i] = '\0';
-        else
-            output[i] = output_str[i];
-    }
-    output[MAX_OUTPUT_LENGTH - 1] = '\0';
+
+    StringManagement::string_to_char_array(_pwd.getCurrent(), newPWD, MAX_PWD_LENGTH);
+    StringManagement::string_to_char_array(output_str, output, MAX_OUTPUT_LENGTH);
     answer.header.id = RemoteShell::TCPCustomMessageID::CHANGE_DIRECTORY_OUT;
     answer << output;
     answer << newPWD;

@@ -27,6 +27,7 @@ target_sources(RemoteShell_Server PUBLIC
     ${SRC_SERV}/main.cpp
     ${SRC_COMMON}/FPSManager.cpp
     ${SRC_COMMON}/PWD.cpp
+    ${SRC_COMMON}/StringManagement.cpp
 )
 
 target_include_directories(RemoteShell_Server PUBLIC
@@ -45,6 +46,7 @@ target_sources(RemoteShell_Client PUBLIC
     ${SRC_CLIENT_NETWORK}/src/Network.cpp
     ${SRC_COMMON}/FPSManager.cpp
     ${SRC_COMMON}/PWD.cpp
+    ${SRC_COMMON}/StringManagement.cpp
 )
 
 target_include_directories(RemoteShell_Client PUBLIC
