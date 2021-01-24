@@ -1,5 +1,6 @@
 #include "PWD.hpp"
-#include <iostream>
+#include "StringManagement.hpp"
+#include <algorithm>
 
 PWD::PWD() : _current("/"), _disk("")
 {
@@ -40,16 +41,13 @@ const std::string PWD::getDisk() const
 
 std::vector<std::string> PWD::parsePath(std::string path) const
 {
-    std::vector<std::string> vPath = {};
-    size_t count = std::count(path.begin(), path.end(), SEPARATOR);
+    std::vector<std::string> vPath = StringManagement::split(path, SEPARATOR);
+    std::vector<std::string> vOpt = StringManagement::split(path, '/');
 
-    for (size_t i = 0; i <= count; i++) {
-        vPath.push_back(path.substr(0, path.find_first_of(SEPARATOR)));
-        if (i == count)
-            break;
-        path = path.substr(path.find_first_of(SEPARATOR) + 1);
-    }
-    return vPath;
+    if (vPath.size() > vOpt.size())
+        return vPath;
+    else
+        return vOpt;
 }
 
 void PWD::setCurrent(const std::string &path)
@@ -91,7 +89,8 @@ void PWD::clearPath(std::vector<std::string> &vPath)
     while (std::count(vPath.begin(), vPath.end(), "..") > 0 || std::count(vPath.begin(), vPath.end(), ".") > 0) {
         for (size_t i = 0; i < vPath.size(); i++) {
             if (vPath.at(i) == ".." && i > 1) {
-                vPath.erase(vPath.begin() + (i - 1), vPath.begin() + i);
+                vPath.erase(vPath.begin() + i);
+                vPath.erase(vPath.begin() + (i - 1));
                 break;
             } else if (vPath.at(i) == ".." && i == 1) {
                 vPath.erase(vPath.begin() + i);

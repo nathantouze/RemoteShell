@@ -1,4 +1,5 @@
 #include "StringManagement.hpp"
+#include <algorithm>
 
 char *StringManagement::string_to_char_array(const std::string &str, char *char_array, size_t size)
 {

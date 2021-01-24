@@ -58,7 +58,7 @@ std::shared_ptr<RemoteShell::UDPServer> NetworkServer::getUDPServer(uint32_t por
 
 uint32_t NetworkServer::startNewUDPServer() 
 {
-    uint32_t port = _udpServers.size() + 60000;
+    uint32_t port = uint32_t(_udpServers.size() + 60000);
     _udpServers.push_back(std::make_shared<RemoteShell::UDPServer>(port));
     _udpServers.back()->startServer();
     return port;

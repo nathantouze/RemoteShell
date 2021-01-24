@@ -80,7 +80,7 @@ void ClientCore::send_command_to_TCP_server(const std::string &input, enum Remot
     FWNetwork::Message<RemoteShell::TCPCustomMessageID> msg;
 
     msg.header.id = header;
-    StringManagement::string_to_char_array("cd " + _pwd.getCurrent() + "; " + input, cmd, MAX_CMD_LENGTH);
+    StringManagement::string_to_char_array("cd " + (_pwd.getCurrent() == _pwd.getDisk() ? "/" : _pwd.getCurrent()) + "; " + input, cmd, MAX_CMD_LENGTH);
     msg << cmd;
     messages.push_back(msg);
     _network.sendMessagesToTCP(messages);

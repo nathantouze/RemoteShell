@@ -53,7 +53,7 @@ const std::string CoreServer::execute_shell_command(const char *cmd)
     if (!pipe) {
         throw std::runtime_error("popen() failed!");
     }
-    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+    while (fgets(buffer.data(), (int)buffer.size(), pipe.get()) != nullptr) {
         result += buffer.data();
     }
     return result;
@@ -98,7 +98,7 @@ const std::string CoreServer::get_username()
 {
     #ifdef _WIN32
         std::string username_str = execute_shell_command("whoami");
-        username_str.substr(username_str.find_last_of("\\") != std::string::npos ? username_str.find_last_of("\\") + 1 : 0);
+        username_str = username_str.substr(username_str.find_last_of("\\") != std::string::npos ? username_str.find_last_of("\\") + 1 : 0);
         return username_str.substr(0, username_str.size() - 1);
     #else
         std::string username_str = execute_shell_command("whoami");
@@ -176,6 +176,7 @@ void CoreServer::change_directory(FWNetwork::OwnedMessageTCP<RemoteShell::TCPCus
     cmd_cleared = std::string(cmd);
     StringManagement::replace_all(cmd_cleared, "; ", ";");
     cmd_splited = StringManagement::split(cmd_cleared, ';');
+
     if (output_str.length() == 0 && cmd_splited.at(1).length() > 3)
         _pwd.change_directory(cmd_splited.at(1).substr(3));
 
