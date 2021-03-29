@@ -47,7 +47,6 @@ const std::string CoreServer::execute_shell_command(const char *cmd)
 {
     std::array<char, 128> buffer;
     std::string result;
-    std::cout << std::string(cmd) << std::endl;
     std::unique_ptr<FILE, decltype(&PCLOSE)> pipe(POPEN(cmd, "r"), PCLOSE);
 
     if (!pipe) {
