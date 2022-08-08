@@ -23,7 +23,7 @@ To compile the project, there is 2 files : _compile_win.bat_ and _compile_unix.s
 After the execution of the script, you will find two binaries named _RemoteShell_Server(.exe)_ and _RemoteShell_Client(.exe)_
 
 #### Warning
-If you are using _compile_win.bat_, execute this script with a shell that handle basic unix commands (cd, cp, mv, mkdir). 
+If you are using _compile_win.bat_, execute this script with a shell that handles basic unix commands (cd, cp, mv, mkdir). 
 For example, Powershell.exe and cmd.exe **do not** handle these commands. Instead, use [git bash](https://git-scm.com/downloads).
 
 ### Execute project
